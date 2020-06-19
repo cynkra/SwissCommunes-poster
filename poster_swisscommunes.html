@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+
+<title>SwissCommunes:   A package to help navigating the Swiss municipality-mergers</title>
+
+
+
+
+
+
+<!--
+Font-awesome icons ie github or twitter
+-->
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/brands.css" integrity="sha384-n9+6/aSqa9lBidZMRCQHTHKJscPq6NW4pCQBiMmHdUCvPN8ZOg2zJJTkC7WIezWv" crossorigin="anonymous">
+
+<!--
+Google fonts api stuff
+-->
+<link href='https://fonts.googleapis.com/css?family=Special Elite' rel='stylesheet'>
+<link href='https://fonts.googleapis.com/css?family=Helvetica' rel='stylesheet'>
+
+<!--
+Here are the required style attributes for css to make this poster work :)
+-->
+<style>
+@page {
+size: 46in 32in;
+margin: 0;
+padding: 0;
+background-color: #ffffff;
+}
+body {
+margin: 0px;
+padding: 0px;
+width: 46in;
+height: 32in;
+text-align: justify;
+font-size: 45px;
+background-color: #FFFFFF;
+color: #000000;
+}
+/* RMarkdown Class Styles */
+/* center align leaflet map,
+from https://stackoverflow.com/questions/52112119/center-leaflet-in-a-rmarkdown-document */
+.html-widget {
+margin: auto;
+position: sticky;
+margin-top: 2cm;
+margin-bottom: 2cm;
+}
+.leaflet.html-widget.html-widget-static-bound.leaflet-container.leaflet-touch.leaflet-fade-anim.leaflet-grab.leaflet-touch-drag.leaflet-touch-zoom {
+position: sticky;
+width: 100%;
+}
+pre.sourceCode.r, pre.sourceCode.python {
+background-color: #ffffff20;
+border: solid #fff 1mm;
+border-radius: 0.5em;
+padding: 4mm;
+margin: auto;
+margin-top: 1em;
+margin-bottom: 1em;
+/* align-items: center; */
+}
+div.sourceCode {
+background-color: transparent;
+width: 85%;
+margin-left: auto;
+margin-right: auto;
+}
+code.sourceCode.r, code.sourceCode.python {
+background-color: transparent;
+font-size: 20pt;
+border-radius: 2mm;
+}
+code {
+font-size: 25pt;
+font-family: monospace;
+background-color: #fff24;
+color: #fff;
+padding: 1.2mm;
+line-height: 1;
+border-radius: 2mm;
+}
+caption {
+margin-bottom: 10px;
+font-size: 20pt;
+font-style: italic;
+}
+
+tbody tr:nth-child(odd) {
+    background-color: rgb(31, 101, 183)20;
+}
+.table>thead>tr>th, .table>tbody>tr>th, .table>tfoot>tr>th, .table>thead>tr>td, .table>tbody>tr>td, .table>tfoot>tr>td{
+  border-spacing: 0;
+  font-size: 40%;
+  border-style: none;
+  padding-top: 15px;
+  padding-bottom: 15px;
+  padding-right: 1em;
+  padding-left: 1em;
+  line-height: 1em;
+}
+table {
+  margin: auto;
+}
+th {
+  padding-left: 5mm;
+  padding-right: 5mm;
+}
+.caption {
+font-size: 20pt;
+font-style: italic;
+padding-top: 0;
+}
+.references {
+font-size: 20px;
+line-height: 90%;
+}
+/* Create three unequal columns that floats next to each other */
+.column {
+float: left;
+padding: 0px;
+}
+.outer {
+width: 46in;
+height: 32in;
+-webkit-column-count: 2; /* Chrome, Safari, Opera */
+-moz-column-count: 2; /* Firefox */
+column-count: 2;
+-webkit-column-fill: auto;
+-moz-column-fill: auto;
+column-fill: auto;
+-webkit-column-rule-width: 0.5;
+-moz-column-rule-width: 0.5;
+column-rule-width: 0.5;
+-webkit-column-rule-style: solid;
+-moz-column-rule-style: solid;
+column-rule-style: solid;
+-webkit-column-rule-color: black;
+-moz-column-rule-color: black;
+column-rule-color: black;
+-webkit-column-gap: 50%;
+-moz-column-column-gap: 50%;
+column-gap: 50%;
+background-color: #ffffff;
+font-family: Helvetica;
+color: #000000;
+}
+span.citation {
+  color: #fff;
+  font-weight: bold;
+}
+a {
+text-decoration: none;
+color: #fff;
+}
+#title {
+font-size: 90pt;
+text-align: left;
+margin: 0;
+line-height: 90%;
+border-bottom: 0;
+}
+#author {
+color: rgb(31, 101, 183);
+margin: 0;
+text-align: left;
+line-height: 65%;
+font-size: 1.17em;
+}
+#affiliation {
+padding-top: 1em;
+color: rgb(31, 101, 183);
+font-style: italic;
+font-size: 25px;
+margin: 0;
+}
+sup {
+color: #cc0000;
+}
+.affiliation sup {
+font-size: 20px;
+}
+.author sup {
+font-size: 30px;
+}
+.author_extra {
+color: #fff;
+margin: 0;
+line-height: 85%;
+font-size: 35px;
+}
+.outer h1 {
+text-align: center;
+margin-top: 0.5in;
+margin-bottom: 0.5in;
+}
+.outer h2 {
+text-align: center;
+}
+.outer p {
+color: #000000;
+}
+.outer ol {
+text-align: left;
+}
+.main {
+width: calc(46in * 0.5);
+height: 32in;
+position: absolute;
+margin-left: calc(46in * 0.25);
+background-color: rgb(31, 101, 183);
+color: #FFFFFF90;
+font-family: Special Elite;
+background-image: linear-gradient(rgb(31, 101, 183) 50%, #fff);
+}
+.main strong {
+color: #FFFFFF;
+}
+img.main-img-left {
+width: 20%;
+left: 0.5in;
+bottom: 0.2in;
+position: absolute;
+}
+img.main-img-right {
+width: 18%;
+right: 0.5in;
+bottom: 0.2in;
+position: absolute;
+}
+.main p {
+padding-top: 20%;
+font-size: 170px;
+text-align: left;
+}
+.fab {
+color: rgb(31, 101, 183);
+font-size: 25px;
+}
+.twitter, i {
+color: rgb(31, 101, 183);
+font-size: 35px;
+text-decoration: none;
+}
+a.email {
+text-decoration: none;
+color: rgb(31, 101, 183);
+font-size: 35px;
+}
+.envelope {
+color: rgb(31, 101, 183);
+font-size: 5px;
+text-decoration: none;
+}
+.globe {
+color: rgb(31, 101, 183);
+font-size: 5px;
+text-decoration: none;
+}
+.github > .fab {
+color: rgb(31, 101, 183);
+font-size: 40px;
+text-decoration: none;
+}
+.globetext {
+color: rgb(31, 101, 183);
+font-size: 35px;
+text-decoration: none;
+}
+.poster_wrap {
+width: 46in;
+height: 32in;
+padding: 0cm;
+background-color: #ffffff;
+}
+span > #tab:mytable {
+  font-weight: bold;
+}
+.section {
+  padding-left: 10mm;
+  padding-right: 10mm;
+}
+.main p {
+  padding-left: 30mm;
+  padding-right: 30mm;
+}
+.main_pic {
+  width: 50%;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+.orcid img {
+  width: 3%;
+}
+</style>
+</head>
+<body>
+
+
+<div class="poster_wrap">
+<div class="column outer">
+<br>
+<div class="title section">
+<h1 id="title">SwissCommunes: <br> A package to help navigating the Swiss municipality-mergers <br></h1>
+<br>
+<h3 id="author" class="author">
+
+Thomas Knecht<sup> 1</sup><br>
+
+ Kirill Müller<sup> 1</sup><br>
+
+ Tobias Schieferdecker<sup> 1</sup><br>
+
+</h3>
+
+<h5 id="author_extra" class="author_extra">
+  </h5>
+
+<p id="affiliation" class="affiliation">
+<sup>1</sup> cynkra GmbH, Zürich, Switzerland
+</p>
+
+</div>
+<div id="background" class="section level1">
+<h1>Background</h1>
+<p>Starting in the mid-nineties, there has been an ever increasing trend towards higher numbers of municipality mergers in Switzerland.
+Up to now, 1023 municipalities “disappeared” from the municipality cadaster.
+They where either integrated into existing municipalities or a new municipality was created from two or more.</p>
+<p><img src="poster_swisscommunes_files/figure-html/unnamed-chunk-1-1.gif" style="display: block; margin: auto auto auto 0;" /></p>
+<p>Especially for statistical offices, these mergers pose problems for the creation of time series, e.g.:</p>
+<ul>
+<li>values associated with municipalities often jump at the times of mergers</li>
+<li>if the number identifying a municipality changes because of a merger, it can be impossible to track it into the past</li>
+</ul>
+<p><br>
+<br>
+<br>
+<br></p>
+</div>
+<div id="motivation" class="section level1">
+<h1>Motivation</h1>
+<p>Of course this problem is not new and we have seen many different solutions for it, but none that were implemented in R.</p>
+<p>The Federal Statistical Office (FSO) publishes a table containing all mutations concerning the municipalities (renaming, area redistribution, mergers, etc.).
+It is a very informative table, but not easy to use.</p>
+<p>Our goal in this package is to transform the FSO table in a way that makes it more user-friendly.</p>
+</div>
+<div id="the-package" class="section level1">
+<h1>The Package</h1>
+<p>SwissCommunes provides functions that help taking municipality mergers into account.
+The main goal is to generate a mapping table of the municipality mergers for the requested period of time.
+This table allows to map municipalities to the target municipality, that used to be separate from it in the past, but merged with it before the target year.
+This happens for each year of the desired time series.</p>
+<p>Further functionality we want to implement:</p>
+<ul>
+<li>Provide the municipality mergers of a certain year</li>
+<li>generate a mapping table between two municipality states of unknown years</li>
+<li>Provide area as well as population data for each municipality as far back as possible in order to allow support for weighted time series</li>
+</ul>
+<p>Unfortunately, the package is in full development and the version shown here is therefore currently not accessible on a public github account.
+It will be available on <a href="https://github.com/cynkra" style="color:#1F65B7;">github</a> (FIXME: is this the right link?) in the near future though (and in the slightly more distant future most likely also on CRAN).</p>
+</div>
+<div id="difficulties" class="section level1">
+<h1>Difficulties</h1>
+<p>There are cases of mutations that require special attention, and sometimes treatment on an individual basis:</p>
+<ul>
+<li>area redistributions between municipalities</li>
+<li>mutations that take place during the year</li>
+<li>…</li>
+</ul>
+</div>
+
+</div>
+<div class="main">
+<p>Create your merger lookup table and join it to your time series!<br><br> <img src="data/nicht-fusioniert.png" style="position:absolute; width:35%; left:5%; top:43%;" /><br><br> <img src="data/fusioniert.png" style="position:absolute; width:35%; left:5%; top:70%;" /><br><br> <div style="position:absolute; width:40%; left:55%; top:40%; color:black;">
+<b>zh_merger_tbl &lt;- <br />   get_merger_mapping_table(<br/>     START_YEAR = 2010, <br/>     END_YEAR = 2020, <br/>      CANTON = ‘ZH’<br/>  )<b>
+</div><br><br> <iframe src=test.html style='position:absolute; width:30%; height:20%; left:55%; top:51%;' seamless></iframe><br><br> <div style="position:absolute; width:40%; left:55%; top:73%; color:black;">
+<b>zuerich_merged &lt;- join_mergers(<br/>   df = zuerich, <br/>   mapping_table = zh_mergers, <br/>   x_join_year = ‘JAHR’, <br/>   x_join_bfs = ‘BFS’, <br/>   x_gem_name = ‘GEMEINDE’) %&gt;% <br/> group_by(<br/> JAHR, <br/> BFS_neu, <br/> Gemeinde_neu<br/> ) %&gt;% <br/> summarize(pop = sum(pop))<b>
+</div><br><br> <img src="data/arrow4.png" style="position:absolute; width:10%; height:5%; left:42%; top:50%;" /><br><br> <img src="data/arrow3.png" style="position:absolute; width:10%; height:5%; left:42%; top:77%;" /></p>
+
+<img src="logo-transparent(2).png" class="main-img-right" />
+</div>
+</div>
+
+
+
+</body>
+</html>

@@ -1,0 +1,191 @@
+---
+title: "SwissCommunes: <br> A package to help navigating the Swiss municipality-mergers <br>"
+author:
+  - name: Thomas Knecht
+    main: true
+    affil: 1
+  - name: Kirill Müller
+    main: true
+    affil: 1
+  - name: Tobias Schieferdecker
+    main: true
+    affil: 1
+affiliation:
+  - num: 1
+    address: cynkra GmbH, Zürich, Switzerland
+main_findings:
+  - "Create your merger lookup table and join it to your time series!"
+  - "![](`r here::here('eRum-poster/data/nicht-fusioniert.png')`){style='position:absolute; width:35%; left:5%; top:43%;'}"
+  - "![](`r here::here('eRum-poster/data/fusioniert.png')`){style='position:absolute; width:35%; left:5%; top:70%;'}"
+  - "<div style='position:absolute; width:40%; left:55%; top:40%; color:black;'><b>zh_merger_tbl <- <br /> &emsp; get_merger_mapping_table(<br/> &emsp; &emsp; START_YEAR = 2010, <br/> &emsp; &emsp; END_YEAR = 2020, <br/>&emsp;&nbsp;&nbsp;&nbsp;&nbsp; CANTON = 'ZH'<br/>&emsp; )<b></div>"
+  - "<iframe src=test.html style='position:absolute; width:30%; height:20%; left:55%; top:51%;' seamless></iframe>"
+  - "<div style='position:absolute; width:40%; left:55%; top:73%; color:black;'><b>zuerich_merged <- join_mergers(<br/> &emsp; df = zuerich, <br/> &emsp; mapping_table = zh_mergers, <br/> &emsp; x_join_year = 'JAHR', <br/> &emsp; x_join_bfs = 'BFS', <br/> &emsp; x_gem_name = 'GEMEINDE') %>% <br/> group_by(<br/>&emsp;JAHR, <br/>&emsp;BFS_neu, <br/>&emsp;Gemeinde_neu<br/>&emsp;) %>% <br/> summarize(pop = sum(pop))<b></div>"
+  - "![](`r here::here('eRum-poster/data/arrow4.png')`){style='position:absolute; width:10%; height:5%; left:42%; top:50%;'}"
+  - "![](`r here::here('eRum-poster/data/arrow3.png')`){style='position:absolute; width:10%; height:5%; left:42%; top:77%;'}"
+logoright_name: '![](`r here::here("eRum-poster/logo-transparent(2).png")`){.main-img-right}'
+title_textsize: 90pt
+font_family: "Helvetica"
+primary_colour: rgb(31, 101, 183)
+secondary_colour: "#fff"
+author_textcol: rgb(31, 101, 183)
+affiliation_textcol: rgb(31, 101, 183)
+output: 
+  posterdown::posterdown_betterland:
+    self_contained: false
+    pandoc_args: --mathjax
+    highlight: haddock
+    number_sections: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(SwissCommunes)
+library(rlang)
+pkgload::load_all()
+knitr::opts_chunk$set(cache = TRUE)
+```
+
+
+
+
+```{r prep, include=FALSE}
+
+zuerich <- read_delim(here::here("eRum-poster/data/einwohner.csv"), delim = ";")
+
+zuerich_prep <- zuerich %>%
+  filter(GEMEINDE == "Horgen")
+
+read_gemeinde_shp <- function(file) {
+
+  gem_sf <- sf::read_sf(file) %>% 
+    mutate(year = as.numeric(sub(".*GEN_A4_GEMEINDEN_.*_shp/GEN_A4_GEMEINDEN_SEEN_(.*).shp", "\\1", file)))
+  
+  return(gem_sf)
+}
+
+
+zh_mutations_flat <- get_merger_mapping_table(2015, 2019, "ZH")
+
+zh_mutations_compact <- get_merger_mapping_table(2015, 2020, "ZH", type = "compact")
+
+zuerich_fusioniert <- join_mergers(zuerich, zh_mutations_flat, x_join_year = "JAHR", "BFS", "GEMEINDE")
+
+files <- list.files(path = here::here("eRum-poster/data"), pattern=".*_SEEN_.*.shp$", recursive = TRUE)
+
+zuerich_sf <- map_df(paste0(here::here("eRum-poster/data/"),files), read_gemeinde_shp) %>% filter(year == 2015)
+
+# zuerich_sf_2014 <- sf::read_sf(here::here("eRum-poster/data/GEN_A4_GEMEINDEN_2014_shp/GEN_A4_GEMEINDEN_2014.shp")) %>% 
+#   mutate(year = 2014)
+# 
+# zuerich_sf_2014_seen <- zuerich_sf %>% 
+#   filter(year == 2015 & ART_CODE == 3) %>% 
+#   mutate(year = 2014) %>% 
+#   bind_rows(zuerich_sf_2014)
+# 
+# zuerich_sf_total <- bind_rows(zuerich_sf_2014_seen, zuerich_sf)
+
+new_gem <- zh_mutations_flat %>% 
+  filter(year > 2015) %>% 
+  distinct(mId.y) %>% pull()
+
+years <- c(2015, 2016, 2017, 2018, 2019, 2019)
+
+multiply_rows <- function(year1, df) {
+  df_year <- df %>% mutate(year = year1)
+  
+  df_year
+}
+
+multiply_mergers <- function(year, df){
+  
+  mergers_year <- df %>% filter(year_to == year)
+  
+  years <- c(year:2019)
+  
+  mergers <- map_df(years, multiply_rows, df = mergers_year)
+  
+  mergers
+}
+
+mergers_multiplied <- map_df(years, multiply_mergers, df = zh_mutations_compact)
+
+zuerich_sf_tot <- map_df(years, multiply_rows, df = zuerich_sf )
+
+zuerich_sf_fus <- zuerich_sf_tot %>% left_join(mergers_multiplied, by = c("year" = "year", "BFS" = "mId.x"))
+
+zuerich_sf_prep <- zuerich_sf_fus %>% 
+  mutate(color = ifelse(!is.na(year_to), 1, 
+                        ifelse(ART_CODE == 3, 2, 0))) 
+
+zuerich_sf_2015 <- zuerich_sf_prep %>% filter(year == 2015)
+
+zuerich_sf_2016 <- zuerich_sf_prep %>% filter(year == 2016)
+
+p <- ggplot() + 
+  geom_sf(data = zuerich_sf_prep, aes(fill = as.factor(color)), size = 0.2) +
+  coord_sf(datum = NA) +
+  scale_fill_manual(values=c("#e6e6e6", "#9fdf9f", "#ccf2ff")) +
+  scale_color_manual(values =c("#f2f2f2")) +
+  theme(panel.background = element_blank()) +
+  theme(legend.position = "none") +
+  #theme(panel.grid.major = element_line(colour = "transparent")) +
+  labs(title = 'Date: {current_frame}')
+ 
+
+
+```
+
+# Background
+
+Starting in the mid-nineties, there has been an ever increasing trend towards higher numbers of municipality mergers in Switzerland.
+Up to now, 1023 municipalities "disappeared" from the municipality cadaster.
+They where either integrated into existing municipalities or a new municipality was created from two or more.
+
+
+```{r, echo=FALSE, warnings=FALSE, message=FALSE, fig.align="left", fig.width=5}
+p + gganimate::transition_manual(year)
+```
+
+Especially for statistical offices, these mergers pose problems for the creation of time series, e.g.:
+
+- values associated with municipalities often jump at the times of mergers
+- if the number identifying a municipality changes because of a merger, it can be impossible to track it into the past
+
+<br>
+<br>
+<br>
+<br>
+
+# Motivation
+
+Of course this problem is not new and we have seen many different solutions for it, but none that were implemented in R.
+
+The Federal Statistical Office (FSO) publishes a table containing all mutations concerning the municipalities (renaming, area redistribution, mergers, etc.).
+It is a very informative table, but not easy to use.
+
+Our goal in this package is to transform the FSO table in a way that makes it more user-friendly.
+
+# The Package
+
+SwissCommunes provides functions that help taking municipality mergers into account.
+The main goal is to generate a mapping table of the municipality mergers for the requested period of time.
+This table allows to map municipalities to the target municipality, that used to be separate from it in the past, but merged with it before the target year.
+This happens for each year of the desired time series.
+
+Further functionality we want to implement:
+
+- Provide the municipality mergers of a certain year
+- generate a mapping table between two municipality states of unknown years
+- Provide area as well as population data for each municipality as far back as possible in order to allow support for weighted time series
+
+Unfortunately, the package is in full development and the version shown here is therefore currently not accessible on a public github account.
+It will be available on <a href="https://github.com/cynkra" style="color:`r rgb(31 / 255, 101 / 255, 183/ 255)`;">github</a> (FIXME: is this the right link?) in the near future though (and in the slightly more distant future most likely also on CRAN).
+
+# Difficulties
+
+There are cases of mutations that require special attention, and sometimes treatment on an individual basis:
+
+- area redistributions between municipalities
+- mutations that take place during the year
+- ...
